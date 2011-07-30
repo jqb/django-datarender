@@ -14,5 +14,5 @@ class Options(object):
         opts = Options(None)  # defaults
         for attr in ['model', 'form', 'fields', 'exclude', 'field_mapper', 'field_class']:
             if attr in data:
-                setattr(opts, attr, data[name])
+                setattr(opts, attr, data[attr])
         return opts

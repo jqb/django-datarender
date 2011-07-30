@@ -41,18 +41,18 @@ class BaseFieldSet(object):
 class DynamicFieldSet(BaseFieldSet):
     def __init__(self, model_class, field_names, runtime_data=None):
         self.base_fields = SortedDict()
-        self._meta = Options.from_dict({
+        self._meta = opts = Options.from_dict({
                 'model': model_class,
                 'fields': field_names,
                 })
 
         for field in model_class._meta.fields:
             if field.name in field_names:
-                new_field = mapper.get(field)
+                new_field = opts.field_mapper.get(field)
                 new_field.name = field.name
                 self.base_fields[field.name] = new_field
 
-        super(DynamicFieldSet).__init__(self, runtime_data)
+        super(DynamicFieldSet, self).__init__(runtime_data)
 
 
 class FieldSet(BaseFieldSet):

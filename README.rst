@@ -31,10 +31,10 @@ point fields you want to show:
 ::
 
     <table>
-        {% for value, meta in task|model_fields:"title,description,close_date" %}
+        {% for value, f in task|object_fields:"title,description,close_date" %}
         <tr>
-            <td class="label-{{ meta.css }">{{ meta.label }}</td>
-     	    <td class="{{ meta.css }">{% render value meta %}</td>
+            <td class="label-{{ f.meta.css }">{{ f.meta.label }}</td>
+     	    <td class="{{ f.meta.css }">{% render value f %}</td>
         </tr>
         {% endfor %}
     </table>
