@@ -33,7 +33,7 @@ point fields you want to show:
     <table>
         {% for value, f in task|object_fields:"title,description,close_date" %}
         <tr>
-            <td class="label-{{ f.meta.css }">{{ f.meta.label }}</td>
+            <td class="label-{{ f.meta.css }}">{{ f.meta.label }}</td>
      	    <td class="{{ f.meta.css }">{% render value f %}</td>
         </tr>
         {% endfor %}
