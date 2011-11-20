@@ -29,7 +29,7 @@ view of task object.
 1) The simplest solution
 
 The simplest  usage of datarender  plugin is just point  fields you
-want to show:
+want to show
 
 ::
     {% load datarender_tags %}
@@ -64,7 +64,7 @@ datarender use "render.py" file in your application.
 
 
 Once you define it in your_application.render file, you can simply use
-it in the template:
+it in the template
 
 ::
     {% load datarender_tags %}
