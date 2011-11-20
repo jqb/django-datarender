@@ -42,3 +42,9 @@ point fields you want to show:
 
 datarender plugin will simply create generic fields for a given
 model instance. That's all you need for a basic usage.
+
+
+Requirements
+------------
+
+- nosetest for tests
