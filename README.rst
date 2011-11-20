@@ -32,6 +32,7 @@ The simplest  usage of datarender  plugin is just point  fields you
 want to show
 
 ::
+
     {% load datarender_tags %}
 
     <div class="task-details">
@@ -67,6 +68,7 @@ Once you define it in your_application.render file, you can simply use
 it in the template
 
 ::
+
     {% load datarender_tags %}
 
     {% renderer "tasks.TaskDetail" as taskdetail %}
