@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-from testapps.tasks.models import Task
-from testapps.tasks.forms import TaskForm
+from tests.tasks.models import Task
+from tests.tasks.forms import TaskForm
 
 import datarender
 
 
-class TaskList(datarender.FieldSet):
+class TaskList(datarender.ColumnSet):
     class Meta:
         model = Task
 
 
-class TaskListNoID(datarender.FieldSet):
+class TaskListNoID(datarender.ColumnSet):
     class Meta:
         model = Task
         exclude = ('id',)

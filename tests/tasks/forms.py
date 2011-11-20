@@ -1,4 +1,4 @@
-from testapps.tasks import models
+from tests.tasks import models
 from django import forms
 
 
