@@ -1,4 +1,9 @@
 from django.utils.datastructures import SortedDict
+from django.utils.translation import ugettext
+
+from django.utils.safestring import mark_safe
+from django.template.loader import render_to_string
+from django.template import Context, Template
 
 
 class ObjectCounterMetaclass(type):
@@ -53,3 +58,49 @@ def collect_attribute(attr_name, objects, filterfun=lambda attr: attr is not Non
 
 def pretty_name(name):
     return ' '.join(name.split('_')).capitalize()
+
+
+class RenderingMixin(object):
+    def render_to_string(self, *args, **kwargs):
+        return render_to_string(*args, **kwargs)
+
+    def mark_safe(self, *args, **kwargs):
+        return mark_safe(*args, **kwargs)
+
+    def render_template(self, template_string, context):
+        return unicode(Template(template_string).render(Context(context)))
+
+    def pretty_name(self, name, translate=True):
+        if translate:
+            return ugettext(pretty_name(name))
+        return pretty_name(name)
+
+
+class cached_property(object):
+    """
+    Defines property with cache field.
+
+    >>> class Data(object):
+    >>>     name = cached_property('_name', default=lambda self: 'default_name')
+    >>>
+    >>> data = Data()
+    >>> print data.name
+    >>> "default_name"
+    >>> print data._name  # <= real value
+    >>>
+    """
+    def __init__(self, target, default=lambda instance: None):
+        self.name = target
+        self.default_value = default
+
+    def __get__(self, instance, type_instance):
+        if instance is None:
+            raise AttributeError('%s attribute can be get only on instance' % self.name)
+
+        if not hasattr(instance, self.name):
+            setattr(instance, self.name, self.default_value(instance))
+
+        return getattr(instance, self.name)
+
+    def __set__(self, instance, value):
+        setattr(instance, self.name, value)

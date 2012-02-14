@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
-from datarender.utils import SortedDict
+from django.db import models
+
+from datarender.utils import SortedDict, RenderingMixin
 from datarender.options import Options
 from datarender.models import FieldSetMetaclass
-from datarender.fields import Header, HeaderMapper, FormField, FormFieldMapper
+from datarender.fields import Field, Header, FormField, DateTimeField, DateField
 
 
 class TemplateField(object):
     # just the runtime representation for template usage
 
-    def __init__(self, fieldset, field):
-        self.fieldset = fieldset
+    def __init__(self, data, fieldset, field):
+        self._data = data
+        self._fieldset = fieldset
         self.meta = field
 
+    def value(self):
+        return self._fieldset.get(self.meta, self._data)
 
-class BaseFieldSet(object):
+
+class BaseFieldSet(RenderingMixin):
     runtime_field = TemplateField
 
     def __init__(self, runtime_data=None):
@@ -22,19 +28,19 @@ class BaseFieldSet(object):
     def get(self, fieldmeta, obj):
         get_attr = getattr(self, 'get_%s' % fieldmeta.name, None)
         if get_attr:
-            return get_attr(obj)
+            return get_attr(obj, self.runtime_data)
         return fieldmeta.get(obj, self.runtime_data)
 
     def render(self, fieldmeta, obj):
         render_attr = getattr(self, 'render_%s' % fieldmeta.name, None)
         if render_attr:
-            return render_attr(obj)
+            return render_attr(obj, self.runtime_data)
         return fieldmeta.render(obj, self.runtime_data)
 
     def iterate(self, data):
         result = []
         for fieldmeta in self.base_fields.values():
-            result.append((self.get(fieldmeta, data), self.runtime_field(self, fieldmeta)))
+            result.append(TemplateField(data, self, fieldmeta))
         return result
 
 
@@ -44,6 +50,7 @@ class DynamicFieldSet(BaseFieldSet):
         self._meta = opts = Options.from_dict({
                 'model': model_class,
                 'fields': field_names,
+                'field_class': Field,
                 })
 
         for field in model_class._meta.fields:
@@ -58,11 +65,18 @@ class DynamicFieldSet(BaseFieldSet):
 class FieldSet(BaseFieldSet):
     __metaclass__ = FieldSetMetaclass
 
+    class Meta:
+        field_class = Field
+        mapping = {  # FIXME: Maybe it shouldn't be here. Another class for models?
+            models.DateField: DateField,
+            models.DateTimeField: DateTimeField,
+        }
+
 
 class HeaderSet(FieldSet):
     class Meta:
         field_class = Header
-        field_mapper = HeaderMapper()
+        mapping = {}
 
 
 class ColumnSet(FieldSet):
@@ -101,4 +115,5 @@ class ColumnSet(FieldSet):
 class FormFieldSet(FieldSet):
     class Meta:
         field_class = FormField
-        field_mapper = FormFieldMapper()
+        mapping = {}
+

@@ -16,14 +16,14 @@ class SimplestUsageTest(TestCase):
     def test_simplest_usage(self):
         template_string = ""
         template_string += """{% load datarender_tags %}"""
-        template_string += """{% for value, f in task|object_fields:"title,description,close_date" %}"""
-        template_string += """{{ f.meta.label }} | {% render value f %}"""
-        template_string += "\n"
+        template_string += """{% for f in task|fields:"title,description,close_date" %}"""
+        template_string += """{{ f.meta.label }} | {% render f %}"""
+        template_string += """\n"""
         template_string += """{% endfor %}"""
 
         result = self.render_template(template_string, {
-                'task': self.task,
-                })
+            'task': self.task,
+        })
 
         expected = ""
         expected += "Title | Test task"

@@ -1,49 +1,18 @@
 # -*- coding: utf-8 -*-
-from django.db import models
 from django import forms
-from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext
-from django.template.loader import render_to_string
-from django.template import Context, Template
 
-from datarender.utils import ObjectCounter, pretty_name
+from datarender.utils import ObjectCounter, RenderingMixin, cached_property
 
 
-class BaseField(ObjectCounter):
+class BaseField(ObjectCounter, RenderingMixin):
+    accepted_attrs = ('css', 'style')
     name = None  # name is always injected via metaclass
-    translate = True
 
-    def __init__(self, css=None, style=None):
-        self._css = css
-        self.style = style
-
-    def pretty_name(self, name):
-        if self.translate:
-            return ugettext(pretty_name(name))
-        return pretty_name(name)
-
-    def css(self):
-        if self._css is not None:
-            return self._css
-        elif isinstance(self.__class__.css, basestring):
-            return self.__class__.css
-        return self.__class__.__name__.lower()
-
-    def _set_css(self, css):
-        self._css = css
-
-    css = property(css, _set_css)
-
-    # utility functions
-    def render_to_string(self, *args, **kwargs):
-        return render_to_string(*args, **kwargs)
-
-    def mark_safe(self, *args, **kwargs):
-        return mark_safe(*args, **kwargs)
-
-    def render_template(self, template_string, context):
-        return unicode(Template(template_string).render(Context(context)))
-    # end of utility functions
+    def __init__(self, **kwargs):
+        for name, value in kwargs.items():
+            if name not in self.accepted_attrs:
+                raise AttributeError("There's no such attribute on \"accepted_attrs\" list: %s" % name)
+            setattr(self, name, value)
 
     def get(self, obj, runtime_data=None):
         return getattr(obj, self.name)
@@ -53,25 +22,12 @@ class BaseField(ObjectCounter):
 
 
 class Field(BaseField):
-    def __init__(self, label=None, css=None, style=None):
-        self.label = label
-        super(Field, self).__init__(css=css, style=style)
-
-    def _get_label(self):
-        return self._label if self._label is not None else self.pretty_name(self.name)
-
-    def _set_label(self, label):
-        self._label = label
-
-    label = property(_get_label, _set_label)
+    accepted_attrs = BaseField.accepted_attrs + ('label',)
+    label = cached_property('_label', default=lambda self: self.pretty_name(self.name))
 
 
 class BaseDateField(Field):
-    format = None
-
-    def __init__(self, *args, **kwargs):
-        self.format = kwargs.pop('format', None) or self.__class__.format
-        super(BaseDateField, self).__init__(*args, **kwargs)
+    accepted_attrs = Field.accepted_attrs + ('format',)
 
     def render(self, value, runtime_data=None):
         if value:
@@ -88,28 +44,21 @@ class DateTimeField(BaseDateField):
 
 
 class FieldMapper(object):
-    classes = {
-        models.DateField: DateField,
-        models.DateTimeField: DateTimeField,
-        }
+    classes = {}
+    default_field_class = Field
+
+    def __init__(self, classes=None, default_field_class=None):
+        self.classes = classes or self.__class__.classes
+        self.default_field_class = default_field_class or self.__class__.default_field_class
 
     def get(self, dbfield):
-        class_ = self.classes.get(dbfield.__class__, Field)
+        class_ = self.classes.get(dbfield.__class__, self.default_field_class)
         return class_(css=dbfield.__class__.__name__.lower())
 
 
 class Header(BaseField):
-    def __init__(self, css=None, style=None, header=None):
-        self.header = header
-        super(Header, self).__init__(css=css, style=style)
-
-    def _get_header(self):
-        return self._header if self._header is not None else self.pretty_name(self.name)
-
-    def _set_header(self, header):
-        self._header = header
-
-    header = property(_get_header, _set_header)
+    accepted_attrs = BaseField.accepted_attrs + ('header',)
+    header = cached_property('_header', default=lambda self: self.pretty_name(self.name))
 
     def get(self, model, runtime_data=None):
         return model
@@ -118,22 +67,9 @@ class Header(BaseField):
         return self.header
 
 
-class HeaderMapper(FieldMapper):
-    def get(self, dbfield):
-        return Header(css=dbfield.__class__.__name__.lower())
-
-
 class FormField(Field):
     def get(self, form, data=None):
         return form[self.name]
 
     def render(self, formfield, data=None):
         return unicode(formfield)
-
-
-class FormFieldMapper(object):
-    classes = {}
-
-    def get(self, formfield):
-        class_ = self.classes.get(formfield.__class__, FormField)
-        return class_(css=formfield.__class__.__name__.lower())

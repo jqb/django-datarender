@@ -2,9 +2,8 @@
 import os, sys
 from os.path import join, pardir, abspath, dirname
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'conf'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.conf'
 sys.path.insert(0, abspath(join(dirname(__file__), pardir)))
-sys.path.insert(0, abspath(dirname(__file__)))
 
 # Test stuff
 test_runner, old_config = None, None

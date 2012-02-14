@@ -36,7 +36,7 @@ want to show
     {% load datarender_tags %}
 
     <div class="task-details">
-        {% for value, f in task|object_fields:"title,description,close_date" %}
+        {% for value, f in task|fields:"title,description,close_date" %}
         <div class="field {{ f.meta.name }}">
             <div class="label">{{ f.meta.label }}</div>
      	    <div class="value">{% render value f %}</div>
@@ -71,18 +71,18 @@ it in the template
 
     {% load datarender_tags %}
 
-    {% renderer "tasks.TaskDetail" as taskdetail %}
+    {% renderer "tasks.render.TaskDetail" as taskdetail %}
 
     {# you can add "runtime data" to the constructor, #}
     {# it can be everything eg. request object: #}
-    {#     {% renderer "tasks.TaskDetail"  request as taskdetail %}   #}
+    {#     {% renderer "tasks.render.TaskDetail"  request as taskdetail %}   #}
 
     <div class="task-details">
-        {% for value, f in task|object_fields:taskdetail %}
+        {% for f in task|fields:taskdetail %}
         <div class="field {{ f.meta.name }}">
             <div class="label">{{ f.meta.label }}</div>
-     	    <div class="value">{% render value f %}</div>
-        </tr>
+     	    <div class="value">{% render f %}</div>
+        </div>
         {% endfor %}
     </div>
 
